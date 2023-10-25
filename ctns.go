@@ -2,7 +2,7 @@ package ctns
 
 import "reflect"
 
-// ConvertToNewStruct ToNewStruct converts a struct to another struct with same tag
+// ConvertToNewStruct converts a struct to another struct with same tag
 // tagName accepts json or other tag name which will be used to match fields
 func ConvertToNewStruct[T1, T2 any](obj T1, tagName string) T2 {
 	sType := reflect.TypeOf(obj)
