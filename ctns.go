@@ -14,7 +14,7 @@ func ConvertToNewStruct[T1, T2 any](obj T1, tagName string) T2 {
 		sType = sType.Elem()
 		sValue = sValue.Elem()
 	}
-	var d T2
+	d_exist_map, d_idx_map, d := getDestinationInfo[T2](tagName)
 	dType := reflect.TypeOf(d)
 	dKind := dType.Kind()
 	if dKind == reflect.Ptr {
@@ -29,26 +29,6 @@ func ConvertToNewStruct[T1, T2 any](obj T1, tagName string) T2 {
 	} else {
 		dValue = reflect.ValueOf(&d).Elem()
 	}
-	d_exist_map := make(map[string]bool)
-	d_idx_map := make(map[string]int)
-	for i := 0; i < dType.NumField(); i++ {
-		d_tag := dType.Field(i).Tag.Get(tagName)
-		if d_tag != "" {
-			d_idx_map[d_tag] = i
-			d_exist_map[d_tag] = true
-		}
-	}
-	for i := 0; i < sType.NumField(); i++ {
-		s_tag := sType.Field(i).Tag.Get(tagName)
-		if s_tag != "" && d_exist_map[s_tag] {
-			if dType.Field(d_idx_map[s_tag]).Type != sType.Field(i).Type {
-				continue
-			}
-			dField := dValue.Field(d_idx_map[s_tag])
-			if dField.CanSet() {
-				dField.Set(sValue.Field(i))
-			}
-		}
-	}
+	setDestinationStructValue(sType, sValue, dType, dValue, d_exist_map, d_idx_map, tagName)
 	return d
 }
