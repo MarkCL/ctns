@@ -31,10 +31,19 @@ type Test4 string
 
 func main() {
 	t1 := &Test{Name: "test", Age: 10, Address: "address", Mobile: "mobile"}
-	t2 := ctns.ConvertToNewType[*Test, *Test2](t1, "json")
+	t2, err := ctns.ConvertToNewType[*Test, *Test2](t1, "json")
+	if err != nil {
+		fmt.Println(err)
+	} else {
+		fmt.Println(t2)
+	}
+	
 	var t3 Test3 = "ttt"
-	t4 := ctns.ConvertToNewType[Test3, Test4](t3)
-	fmt.Println(t2)
-	fmt.Println(t4)
+	t4, err2 := ctns.ConvertToNewType[Test3, Test4](t3)
+	if err2 != nil {
+		fmt.Println(err2)
+	} else {
+		fmt.Println(t4)
+	}
 }
 ```

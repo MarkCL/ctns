@@ -1,17 +1,20 @@
 package ctns
 
-import "reflect"
+import (
+	"errors"
+	"reflect"
+)
 
 // ConvertToNewType converts a struct to another struct with same tag
 // if tagName is not passed into this function, it will convert T1 to T2 with forced transformation
 // tagName accepts json or other tag name which will be used to match fields
 // it will only take first tagName for conversion
-func ConvertToNewType[T1, T2 any](obj T1, tagName ...string) T2 {
+func ConvertToNewType[T1, T2 any](obj T1, tagName ...string) (T2, error) {
 	sType := reflect.TypeOf(obj)
 	sValue := reflect.ValueOf(obj)
 	if sType.Kind() == reflect.Ptr {
 		if sValue.IsNil() {
-			return []T2{}[0]
+			return []T2{}[0], errors.New("nil pointer")
 		}
 		sType = sType.Elem()
 		sValue = sValue.Elem()
@@ -32,7 +35,11 @@ func ConvertToNewType[T1, T2 any](obj T1, tagName ...string) T2 {
 	}
 
 	if tagName == nil {
-		return sValue.Convert(dType).Interface().(T2)
+		if sValue.CanConvert(dType) {
+			return sValue.Convert(dType).Interface().(T2), nil
+		} else {
+			return d, errors.New("can not convert to new type")
+		}
 	}
 
 	var dValue reflect.Value
@@ -42,5 +49,5 @@ func ConvertToNewType[T1, T2 any](obj T1, tagName ...string) T2 {
 		dValue = reflect.ValueOf(&d).Elem()
 	}
 	setDestinationStructValue(sType, sValue, dType, dValue, d_exist_map, d_idx_map, tagName[0])
-	return d
+	return d, nil
 }
