@@ -12,7 +12,8 @@ import (
 func ConvertToNewType[T1, T2 any](obj T1, tagName ...string) (T2, error) {
 	sType := reflect.TypeOf(obj)
 	sValue := reflect.ValueOf(obj)
-	if sType.Kind() == reflect.Ptr {
+	sKind := sType.Kind()
+	if sKind == reflect.Ptr {
 		if sValue.IsNil() {
 			return []T2{}[0], errors.New("nil pointer")
 		}
@@ -29,17 +30,18 @@ func ConvertToNewType[T1, T2 any](obj T1, tagName ...string) (T2, error) {
 	dKind := dType.Kind()
 	if dKind == reflect.Ptr {
 		dType = dType.Elem()
-		d = reflect.New(dType).Interface().(T2)
-	} else {
+		if tagName != nil {
+			d = reflect.New(dType).Interface().(T2)
+		}
+	} else if tagName != nil {
 		d = reflect.New(reflect.TypeOf([1]T2{})).Elem().Index(0).Interface().(T2)
 	}
 
 	if tagName == nil {
-		if sValue.CanConvert(dType) {
-			return sValue.Convert(dType).Interface().(T2), nil
-		} else {
+		if !sValue.CanConvert(dType) || (sKind == reflect.Ptr && dKind != reflect.Ptr) || (sKind != reflect.Ptr && dKind == reflect.Ptr) {
 			return d, errors.New("can not convert to new type")
 		}
+		return sValue.Convert(dType).Interface().(T2), nil
 	}
 
 	var dValue reflect.Value
